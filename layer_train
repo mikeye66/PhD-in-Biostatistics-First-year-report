@@ -1,0 +1,69 @@
+mcsapply<-function (X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE) {
+  FUN <- match.fun(FUN)
+  answer <- mclapply(X = X, FUN = FUN, ...)
+  if (USE.NAMES && is.character(X) && is.null(names(answer))) 
+    names(answer) <- X
+  if (!isFALSE(simplify) && length(answer)) 
+    simplify2array(answer, higher = (simplify == "array"))
+  else answer
+}
+
+
+load("layered_network_new_new_new")
+
+
+matrix<-layered_network_new[[2]]
+last_mat<-layered_network_new[[1]]
+diag(last_mat)<-0
+
+yoyo<-as.network(matrix,directed = F)
+if(is.error(try(summary(yoyo~density)))==T) {density_obs<-0
+}else density_obs<-summary(yoyo~density)
+if(is.error(try(summary(yoyo~concurrent)))==T) {concurrent_obs<-0
+}else concurrent_obs<-summary(yoyo~concurrent)
+
+
+theta_old<-c(0.9191835,  0.8679638)
+succ_condition<-T
+
+
+
+while (succ_condition) {
+  size<-length(theta_old)
+  theta_old_one<-theta_old[1]
+  theta_old_two<-theta_old[2]
+  m<-500
+  
+  yi_list_five<-mcsapply(1:m,function(x){
+    hi<-layer_sim(last_mat,last_mat,theta_old_one,theta_old_two,2000)
+    hi<-as.network(hi,directed = F)
+    if(is.error(try(summary(hi~density)))==T) {density<-0
+    }else density<-summary(hi~density)
+    if(is.error(try(summary(hi~concurrent)))==T) {concurrent<-0
+    }else concurrent<-summary(hi~concurrent)
+    c(density,concurrent)
+  },mc.cores = 60)
+  
+  
+  expression<-function(x){
+    theta_one <- x[1]
+    theta_two <- x[2]
+    -((theta_one-theta_old_one)*density_obs+(theta_two-theta_old_two)*concurrent_obs-log((1/m)*sum(exp(colSums(c(theta_one-theta_old_one,theta_two-theta_old_two)*yi_list_five)))))
+  }
+  
+  theta_validate<-theta_old
+  print(theta_validate)
+  theta_old<-nlm(expression, c(theta_old_one, theta_old_two),stepmax=0.1)$estimate
+  
+  density_vec<-yi_list_five[1,]
+  print(density_vec)
+  print(mean(density_vec))
+  concurrent_vec<-yi_list_five[2,]
+  print(concurrent_vec)
+  print(mean(concurrent_vec))
+  density_check<-length(density_vec[density_vec==density_obs])
+  concurrent_check<-length(concurrent_vec[concurrent_vec==concurrent_obs])
+  if(mean(density_vec)<density_obs*1.05 &mean(density_vec)>density_obs*0.95 & mean(concurrent_vec)<concurrent_obs+0.2 & mean(concurrent_vec)>concurrent_obs-0.2) succ_condition<-F
+}
+
+save(theta_validate,file="coef_output_simple")
