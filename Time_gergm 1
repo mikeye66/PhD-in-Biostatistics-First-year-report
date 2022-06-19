@@ -1,0 +1,74 @@
+os<-c(0.4,0.6,0.8,0.85,1,1.5,1.7,1.9,2.1,2.8,2.9,3.2,3.6,4.2,4.6,4.9,5.2,
+      5.3,5.4,5.9,6.4,6.8,6.9,7.1,7.5,7.6,8.1,8.3,8.6,9.3,9.5,9.7,9.8,10.2)
+os<-os*27.77
+dur<-2
+tr<-2
+es<-1
+tt<-310
+#computational time
+size_attempts<-seq(7,21,2)
+time_record_unif<-list()
+time_record_normal<-list()
+for (i in size_attempts) {
+  value_raw<-sapply(1:21,function(x){
+    
+    design1_high <- simprepTemporal(totaltime=tt, onsets=os, 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts1_high <- simTSfmri(design=design1_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design2_high <- simprepTemporal(totaltime=tt, onsets=os, 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts2_high <- simTSfmri(design=design2_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design3_high <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts3_high <- simTSfmri(design=design3_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design4_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts4_high <- simTSfmri(design=design4_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design5_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts5_high <- simTSfmri(design=design5_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design6_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts6_high <- simTSfmri(design=design6_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design7_high <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts7_high <- simTSfmri(design=design7_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    sim_fmri<-data.frame(ts1_high,ts2_high,ts3_high,ts4_high,ts5_high,ts6_high,ts7_high)
+    sim_fmri_matrix<-cor(sim_fmri)
+    sim_fmri_vec<-sim_fmri_matrix[upper.tri(sim_fmri_matrix)]
+    return(sim_fmri_vec)})
+  size<-i*(i-1)/2
+  value_raw<-as.vector(value_raw)
+  value<-value_raw[1:size]
+  res <- matrix(0, i, i)
+  res[upper.tri(res)] <- value
+  diag(res) <- 0
+  res[lower.tri(res)]  <- t(res)[lower.tri(res)]
+  for (k in 1:i) {
+    for (j in 1:i) {
+      if(res[k,j]<0) res[k,j]<-0
+    }
+  }
+  net_size<-as.network(res, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                       names.eval = "weights"
+  )
+  time_record_unif[i]<-mean(sapply(1:100,function(x){system.time(ergm(net_size ~ sum + transitiveweights("min","max", "min") +atleast(threshold=0.4), 
+                                                                      response = "weights", reference = ~Unif(0,1)))[1]}))
+}
+
+
+save(time_record_unif,file="time_record_unif")
