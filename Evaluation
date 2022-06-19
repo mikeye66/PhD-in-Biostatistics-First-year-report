@@ -1,0 +1,74 @@
+global_evaluation_baseline<-function(net_list,observed_net){
+  average_degree_vec<-rep(0,100)
+  diameter_vec<-rep(0,100)
+  density_vec<-rep(0,100)
+  closeness_vec<-rep(0,100)
+  #for observed
+  observed_net<-as.vector(observed_net)
+  observed_net[observed_net<=0.4]<-0
+  observed_net[observed_net>0.4]<-1
+  observed_net<-matrix(observed_net,7,7)
+  observed_igraph_form<-graph_from_adjacency_matrix(observed_net,
+                                                    mode="undirected")
+  observed_average_degree<-mean(degree_distribution(observed_igraph_form))
+  observed_closeness<-mean(closeness(observed_igraph_form))
+  observed_density<-edge_density(observed_igraph_form)
+  observed_diameter<-diameter(observed_igraph_form)
+  
+  for (i in  1:100) {
+    neti_matrix_form<-as.matrix(net_list[[i]], attrname = "weights")
+    neti_vec_form<-as.vector(neti_matrix_form)
+    neti_vec_form[neti_vec_form<=0.4]<-0
+    neti_vec_form[neti_vec_form>0.4]<-1
+    neti_matrix_form<-matrix(neti_vec_form,7,7)
+    neti_igraph_form<-graph_from_adjacency_matrix(neti_matrix_form,
+                                                  mode="undirected")
+    average_degree_vec[i]<-mean(degree_distribution(neti_igraph_form))
+    closeness_vec[i]<-mean(closeness(neti_igraph_form))
+    density_vec[i]<-edge_density(neti_igraph_form)
+    diameter_vec[i]<-diameter(neti_igraph_form)
+  }
+  par(mfrow=c(2,2))
+  boxplot((average_degree_vec-observed_average_degree)/sd(average_degree_vec),main="Averaged degree")
+  abline(h=0,col="cornflowerblue",lwd=2)
+  boxplot((closeness_vec-observed_closeness)/sd(closeness_vec),main="Mean Closeness Centrality")
+  abline(h=0,col="cornflowerblue",lwd=2)
+  boxplot((density_vec-observed_density)/sd(density_vec),main="Density")
+  abline(h=0,col="cornflowerblue",lwd=2)
+  boxplot((diameter_vec-observed_diameter)/sd(diameter_vec),main="Diameter")
+  abline(h=0,col="cornflowerblue",lwd=2)
+}
+
+
+global_evaluation_baseline_weight<-function(net_list,observed_net){
+  
+  vec_sum<-rep(0,100)
+  vec_cyclicalweights<-rep(0,100)
+  vec_sociality<-rep(0,100)
+  vec_atleast<-rep(0,100)
+  vec_transitiveweights<-rep(0,100)
+  #for observed
+  observed_sum<-summary(observed_net ~ sum, response = "weights")
+  observed_cyclicalweights<-summary(observed_net ~ cyclicalweights, response = "weights")
+  observed_sociality<-mean(summary(observed_net ~ sociality, response = "weights"))
+  observed_atleast<-summary(observed_net ~ atleast(0.39), response = "weights")
+  observed_transitiveweights<-summary(observed_net ~ transitiveweights, response = "weights")
+  
+  for (i in  1:100) {
+    vec_sum[i]<-summary(net_list[[i]] ~ sum, response = "weights")
+    vec_cyclicalweights[i]<-summary(net_list[[i]] ~ cyclicalweights, response = "weights")
+    vec_sociality[i]<-mean(summary(net_list[[i]] ~ sociality, response = "weights"))
+    vec_atleast[i]<-summary(net_list[[i]] ~ atleast(0.4), response = "weights")
+    vec_transitiveweights[i]<-summary(net_list[[i]] ~ transitiveweights, response = "weights")
+  }
+  
+  par(mfrow=c(2,2))
+  boxplot((vec_sum-observed_sum)/sd(vec_sum), main="Sum",ylim=c(-1,6.5))
+  abline(h=0,col="cornflowerblue",lwd=2)
+  boxplot(vec_atleast, main="At Least Weight 0.4")
+  abline(h=observed_atleast,col="cornflowerblue",lwd=2)
+  boxplot((vec_sociality-observed_sociality)/sd(vec_sociality), main="Sociality",ylim=c(-1,6.5))
+  abline(h=0,col="cornflowerblue",lwd=2)
+  boxplot((vec_transitiveweights-observed_transitiveweights)/sd(vec_transitiveweights), main="Transitiveweights")
+  abline(h=0,col="cornflowerblue",lwd=2)
+}
