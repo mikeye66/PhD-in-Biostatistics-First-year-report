@@ -1,0 +1,130 @@
+layer_sim<-function(last_net,network_matrix,para_one,para_two,iteration){
+  
+  initial_matrix<-last_net
+  previous_net<-network_matrix
+  net_size<-ncol(network_matrix)
+  
+  #get inital prob
+  previous_network_net <- as.network(previous_net, directed = F, matrix.type = "a", ignore.eval = FALSE)
+  if(is.error(try(summary(previous_network_net~density)))==T) {density<-0
+  }else density<-summary(previous_network_net~density)
+  if(is.error(try(summary(previous_network_net~concurrent)))==T) {concurrent<-0
+  }else concurrent<-summary(previous_network_net~concurrent)
+  
+  
+  if(para_one==Inf){
+    if(density==0){
+      term_density<-0
+    } else term_density<-Inf
+  } else if(para_one==-Inf){
+    if(density==0){
+      term_density<-0
+    } else term_density<--Inf
+  } else term_density<-para_one*density
+  
+  if(para_two==Inf){
+    if(concurrent==0){
+      term_concurrent<-0
+    } else term_concurrent<-Inf
+  } else if(para_two==-Inf){
+    if(concurrent==0){
+      term_concurrent<-0
+    } else term_concurrent<--Inf
+  } else term_concurrent<-para_two*concurrent
+  
+  
+  if(term_density==Inf &&term_concurrent==-Inf){
+    initial_prob<-0
+  } else if(term_density==-Inf &&term_concurrent==Inf){
+    initial_prob<-0
+  } else {
+    initial_prob<-exp(term_density+term_concurrent)
+  }
+  
+  
+  #start looping
+  for (i in 1:iteration) {
+    check_layer<-T
+    while(check_layer==T){
+      k<--88
+      j<--88
+      while (k==j) {
+        k<-sample(1:net_size,1)
+        j<-sample(1:net_size,1)
+      }
+      #to choose from upper triangle
+      change_row<-min(c(k,j))
+      change_col<-max(c(k,j))
+      
+      #switch edge on and off
+      proposal_network<-previous_net
+      if(proposal_network[change_row,change_col]==1) {proposal_network[change_row,change_col]<-0
+      } else {proposal_network[change_row,change_col]<-1}
+      proposal_network[lower.tri(proposal_network)]  <- t(proposal_network)[lower.tri(proposal_network)]
+      diag(proposal_network) <- 0
+      
+      if(proposal_network[change_row,change_col]==1 && initial_matrix[change_row,change_col]==0){
+        check_layer<-T
+      } else{
+        check_layer<-F
+      }
+    }
+    
+    
+    #get u
+    u<-runif(n=1,0,1)
+    
+    #get the summary statistics
+    proposal_network_net <- as.network(proposal_network, directed = F, matrix.type = "a", ignore.eval = FALSE)
+    if(is.error(try(summary(proposal_network_net~density)))==T) {density<-0
+    }else density<-summary(proposal_network_net~density)
+    if(is.error(try(summary(proposal_network_net~concurrent)))==T) {concurrent<-0
+    }else concurrent<-summary(proposal_network_net~concurrent)
+    
+    
+    if(para_one==Inf){
+      if(density==0){
+        term_density<-0
+      } else term_density<-Inf
+    } else if(para_one==-Inf){
+      if(density==0){
+        term_density<-0
+      } else term_density<--Inf
+    } else term_density<-para_one*density
+    
+    if(para_two==Inf){
+      if(concurrent==0){
+        term_concurrent<-0
+      } else term_concurrent<-Inf
+    } else if(para_two==-Inf){
+      if(concurrent==0){
+        term_concurrent<-0
+      } else term_concurrent<--Inf
+    } else term_concurrent<-para_two*concurrent
+    
+    if(term_density==Inf &&term_concurrent==-Inf){
+      updated_prob<-0
+    } else if(term_density==-Inf &&term_concurrent==Inf){
+      updated_prob<-0
+    } else {
+      updated_prob<-exp(term_density+term_concurrent)
+    }
+    
+    
+    if((updated_prob==Inf) && (initial_prob==Inf)){
+      initial_prob<-initial_prob
+      previous_net<-previous_net
+    } else if((updated_prob==0) && (initial_prob==0)){
+      initial_prob<-initial_prob
+      previous_net<-previous_net
+    } else {
+      accep<-updated_prob/initial_prob
+      
+      if(u<accep) {initial_prob<-updated_prob
+      previous_net<-proposal_network
+      }
+    }
+    
+  }
+  return(previous_net)
+}
