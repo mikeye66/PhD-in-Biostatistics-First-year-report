@@ -58,12 +58,17 @@ Binary is to evaluate after binarization by threshold 0.4, such that comparison 
 ##############################################################\
 We start introducing and commenting on the main code:
 
+The code is consist of several sections:\
+fMRI simulation, Multi-valued 1, Multi-valued 2, Multi-layered, GERGM 1, GERGM 2\
 
-Code in GERGM 2 and Multi-layered need multiple cores, which has been set to 60 cores. User may adjust it to their preferable level.
+It is important to point out several issues:
 
+1) Multi-valued 2 is subject to degenracy issue, care should be taken when implementing with values less than 10
+2) Code in GERGM 2 and Multi-layered need multiple cores, which has been set to 60 cores. User may adjust it to their preferable level.
+3) The code of GERGM2 is taking a long fitting time, and should be implemented with care.\
+ Note due to the computations of this model is performed in a manner the normal R program cannot directly extract out the output. \
+ The grid search as described in the report is manual and rather repetitive, which is therefore excluded from the code section. \
+ Note the use_MPLE_only should be switched as F if exploring the training process, \
+ and it should be switched to T if want to see the final result with the user_specified_initial_thetas set as the trained parameter estimates.
+4) Multi-valued 2 time assessment uses the microbenchmark function. However, the reported time varies across different computers.
 
-
-
-
-GERGM 2
-The code of GERGM2 is taking a long fitting time, and should be implemented with care. Note due to the computations of this model is performed in a manner the normal R program cannot directly extract out the output. The grid search as described in the report is manual and rather repetitive, which is therefore excluded from the code section. Note the use_MPLE_only should be switched as F if exploring the training process, and it should be switched to T if want to see the final result with the user_specified_initial_thetas set as the trained parameter estimates.
