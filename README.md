@@ -59,7 +59,7 @@ Binary is to evaluate after binarization by threshold 0.4, such that comparison 
 We start introducing and commenting on the main code:
 
 The code is consist of several sections:\
-fMRI simulation, Multi-valued 1, Multi-valued 2, Multi-layered, GERGM 1, GERGM 2\
+fMRI simulation, Multi-valued 1, Multi-valued 2, Multi-layered, GERGM 1, GERGM 2
 
 It is important to point out several issues:
 
