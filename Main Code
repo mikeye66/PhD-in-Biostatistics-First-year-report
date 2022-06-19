@@ -1,0 +1,2179 @@
+install.packages("GERGM")
+install.packages("devtools")
+install.packages("ergm")
+install_github("matthewjdenny/GERGM")
+install.packages("neuRosim")
+install.packages( pkgs = c("BH","RcppArmadillo","ggplot2","methods",
+                           "stringr","igraph", "plyr", "parallel", "coda", "vegan", "scales",
+                           "RcppParallel","slackr"), dependencies = TRUE)
+
+install.packages("ergm.count")
+install.packages("ergm.rank")
+install.packages("latentnet")
+install.packages("microbenchmark")
+
+library("ergm")
+library("devtools")
+library("neuRosim")
+library(GERGM)
+library("igraph")
+library(ergm.count)
+library(ergm.rank)
+library(latentnet)
+library("microbenchmark")
+
+############################
+#Exploration
+#This section is largely exploring the properties
+#of the simulation package
+
+#produce a data frame of simulated fmri data
+#the resulting dataframe contain
+#Note the onset is set as the same
+#purpose is to understand that, given the same onset
+#how will the correlation be
+sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+
+
+
+#want to check the rough distribution of edge weights
+#plotting the targeted data
+hist(sim_fmri_vec)
+
+#simulate more data and explore how varying simulation
+#parameter may be different
+
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix1<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec1<-as.vector(sim_matrix1)
+hist(sim_vec1)
+
+#change totaltime
+#totaltime=2000, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix2<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=2000, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec2<-as.vector(sim_matrix2)
+hist(sim_vec2)
+
+#change duration
+#totaltime=200, onsets=seq(1,200,40), durations=5, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix3<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=5, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec3<-as.vector(sim_matrix3)
+hist(sim_vec3)
+
+#change effectsize 0.5
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=0.5, TR=2, hrf="double-gamma"
+sim_matrix4<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=0.5, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec4<-as.vector(sim_matrix4)
+hist(sim_vec4)
+
+#change effectsize 1.5
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1.5, TR=2, hrf="double-gamma"
+sim_matrix5<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1.5, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec5<-as.vector(sim_matrix5)
+hist(sim_vec5)
+
+#change hrf to gamma
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="gamma"
+sim_matrix6<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec6<-as.vector(sim_matrix6)
+hist(sim_vec6)
+
+#change hrf to Balloon
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="Balloon"
+sim_matrix7<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="Balloon")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec7<-as.vector(sim_matrix7)
+hist(sim_vec7)
+
+#changing noise to gaussian white
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix8<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("white"), type = c("gaussian"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec8<-as.vector(sim_matrix8)
+hist(sim_vec8)
+
+#changing noise to rician white
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix9<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("white"), type = c("rician"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec9<-as.vector(sim_matrix9)
+hist(sim_vec9)
+
+#changing noise to physiological
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix10<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("physiological"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec10<-as.vector(sim_matrix10)
+hist(sim_vec10)
+
+#changing noise to temporal
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix11<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("temporal"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec11<-as.vector(sim_matrix11)
+hist(sim_vec11)
+
+#changing noise to low-frequency
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix12<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("low-frequency"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec12<-as.vector(sim_matrix12)
+hist(sim_vec12)
+
+#changing noise to task
+#totaltime=200, onsets=seq(1,200,40), durations=20, effectsize=1, TR=2, hrf="double-gamma"
+sim_matrix13<-sapply(1:500,function(x){sim_fmri<-sapply(1:68, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise = c("task-related"))
+  return(ts)
+})
+sim_fmri_matrix<-cor(sim_fmri)
+sim_fmri_vec<-as.vector(sim_fmri_matrix)
+return(sim_fmri_vec)})
+sim_vec13<-as.vector(sim_matrix13)
+hist(sim_vec13)
+
+
+
+#reduce to 7 area
+simple_sim_fmri<-sapply(1:7, function(x){
+  design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                            durations=20, effectsize=1, TR=2, hrf="double-gamma")
+  ts <- simTSfmri(design=design, SNR=1, noise="white")
+  return(ts)
+})
+simple_sim_fmri_matrix<-cor(simple_sim_fmri)
+
+
+
+#now start exploring the noise types
+design <- simprepTemporal(totaltime=200, onsets=seq(1,200,40), 
+                          durations=20, effectsize=1, TR=2, hrf="double-gamma")
+ts <- simTSfmri(design=design, SNR=1, noise="white")
+
+totaltime=200
+onsets=seq(1,200,40) 
+durations=20
+effectsize=1
+TR=2
+hrf="double-gamma"
+base=0
+nscan=60
+SNR=0.6
+type <- "gaussian"
+noise=c("none", "white", "temporal", "low-frequency", "physiological", "task-related", "mixture"), type=c("gaussian","rician"), weights, verbose=TRUE, rho=0.2, freq.low=128, freq.heart=1.17, freq.resp=0.2, vee=1){
+  
+  if(missing(noise)){
+    noise <- "white"
+  }
+  if(missing(type)){
+    type <- "gaussian"
+  }
+  if(noise=="mixture"){
+    if(missing(weights)){
+      stop("Weights should be provided with noise=mixture.")
+    }
+    if(length(weights)!=5){
+      stop("Weights vector should have 5 elements.")
+    }
+    if(sum(weights)!=1){
+      stop("The sum of the weights vector should be equal to 1.")
+    }
+  }
+  
+  if(length(design)==0){
+    act <- base
+    sigma <- mean(act)/SNR
+    if(is.null(TR)){
+      stop("TR value is missing.")
+    }
+    if(is.null(nscan)){
+      stop("nscan value is missing.")
+    }
+  } else if(length(design)>1){
+    stop("Multiple regions are undefined for time series.")
+  } else {
+    act <- base + rowSums(specifydesign(design[[1]]$onsets, design[[1]]$durations, design[[1]]$totaltime, design[[1]]$TR, design[[1]]$effectsize, design[[1]]$acc, conv=design[[1]]$hrf, param=design[[1]]$param))
+    sigma <- mean(act)/SNR
+    TR <- design[[1]]$TR
+    nscan <- design[[1]]$totaltime/design[[1]]$TR
+  }
+  
+  if(noise=="none"){
+    n <- 0
+  }
+  n1<-c(systemnoise(dim=c(1), sigma=sigma, nscan=nscan, type=type, verbose=verbose, vee=vee))
+  plot(c(systemnoise(dim=c(1), sigma=sigma, nscan=nscan, type=type, verbose=verbose, vee=vee)),type = 'l',ylim = c(-3,3))
+  if(noise=="white"){
+    n1 <- c(systemnoise(dim=c(1), sigma=sigma, nscan=nscan, type=type, verbose=verbose, vee=vee))
+  }
+  n2<-c(temporalnoise(dim=c(1), sigma=sigma, nscan=nscan, rho=0.2, verbose=verbose))
+  plot(c(temporalnoise(dim=c(1), sigma=sigma, nscan=nscan, rho=0.2, verbose=verbose)),type = 'l',ylim = c(-3,3))
+  if(noise=="temporal"){
+    n <- c(temporalnoise(dim=c(1), sigma=sigma, nscan=nscan, rho=rho, verbose=verbose))
+  }
+  plot(c(lowfreqdrift(dim=c(1), freq=120, nscan=100, TR=TR, verbose=verbose)))
+  if(noise=="low-frequency"){
+    n <- c(lowfreqdrift(dim=c(1), freq=freq.low, nscan=nscan, TR=TR, verbose=verbose))
+  }
+  if(noise=="physiological"){
+    n <- c(physnoise(dim=c(1), sigma=sigma, nscan=nscan, TR=TR, freq.heart=freq.heart, freq.resp=freq.resp, verbose=verbose))
+  }
+  n3<-c(physnoise(dim=c(1), sigma=sigma, nscan=nscan, TR=TR, freq.heart=1.17, freq.resp=0.2, verbose=T))
+  plot(c(physnoise(dim=c(1), sigma=sigma, nscan=nscan, TR=TR, freq.heart=1.17, freq.resp=0.2, verbose=T)),type="l")
+  if(noise=="task-related"){
+    n <- c(tasknoise(act.image=act, sigma=sigma, type=type, vee=vee))
+  }
+  if(noise=="mixture"){
+    if(weights[1]==0){
+      n.white <- 0
+    } else {
+      n.white <- c(systemnoise(dim=c(1), sigma=sigma, nscan=nscan, type=type, verbose=verbose, vee=vee))
+    }
+    if(weights[2]==0){
+      n.temp <- 0
+    } else {
+      n.temp <- c(temporalnoise(dim=c(1), sigma=sigma, nscan=nscan, rho=rho, verbose=verbose))
+    }
+    if(weights[3]==0){
+      n.low <- 0
+    } else {
+      n.low <- c(lowfreqdrift(dim=c(1), freq=freq.low, nscan=nscan, TR=TR, verbose=verbose))
+    }
+    if(weights[4]==0){
+      n.phys <- 0
+    } else {
+      n.phys <- c(physnoise(dim=c(1), sigma=sigma, nscan=nscan, TR=TR, freq.heart=freq.heart, freq.resp=freq.resp, verbose=verbose))
+    }
+    if(weights[5]==0){
+      n.task <- 0
+    } else {
+      n.task <- c(tasknoise(act.image=act, sigma=sigma, type=type, vee=vee))
+    }
+    w <- weights
+    n <- (w[1]* n.white + w[2]*n.temp + w[3]*n.low + w[4]*n.phys + w[5]*n.task)/sqrt(sum(w^2))
+  }
+  
+  fmri.ts <- act + n - mean(n)
+  return(fmri.ts)
+}
+
+#based on the literature, we combine different noise sources
+plot(0.8*n1+0.14*n2+0.06*n3,type="l")
+
+
+
+
+
+
+os<-c(0.4,0.6,0.8,0.85,1,1.5,1.7,1.9,2.1,2.8,2.9,3.2,3.6,4.2,4.6,4.9,5.2,
+      5.3,5.4,5.9,6.4,6.8,6.9,7.1,7.5,7.6,8.1,8.3,8.6,9.3,9.5,9.7,9.8,10.2)
+os<-os*27.77
+dur<-2
+tr<-2
+es<-1
+tt<-310
+
+#now, consider 7 onset as described in the report
+sim_matrix13<-sapply(1:500,function(x){
+  
+  design1 <- simprepTemporal(totaltime=tt, onsets=os, 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts1 <- simTSfmri(design=design1, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design2 <- simprepTemporal(totaltime=tt, onsets=os, 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts2 <- simTSfmri(design=design2, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design3 <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts3 <- simTSfmri(design=design3, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design4 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts4 <- simTSfmri(design=design4, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design5 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts5 <- simTSfmri(design=design5, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design6 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts6 <- simTSfmri(design=design6, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  
+  design7 <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                             durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+  ts7 <- simTSfmri(design=design7, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                   freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+  sim_fmri<-data.frame(ts1,ts2,ts3,ts4,ts5,ts6,ts7)
+  sim_fmri_matrix<-cor(sim_fmri)
+  sim_fmri_vec<-as.vector(sim_fmri_matrix)
+  return(sim_fmri_vec)})
+sim_vec13<-as.vector(sim_matrix13)
+sim_vec13<-sim_vec13[sim_vec13!=1]
+
+
+#start ploting the 'true' distribution
+pdf("fmri simulation.pdf")
+hist(sim_vec13[sim_vec13>=0],breaks = 50,xlim = c(0,0.8),freq=FALSE,main = "'True' Edge Weights Distribution",xlab="Edge Weights")
+dev.off()
+
+
+
+
+
+
+#Here, we simulate only one dataset with 7 fMRI time-series
+#this is for the models to be fitted on it 
+design1 <- simprepTemporal(totaltime=tt, onsets=os, 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts1 <- simTSfmri(design=design1, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design2 <- simprepTemporal(totaltime=tt, onsets=os, 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts2 <- simTSfmri(design=design2, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design3 <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts3 <- simTSfmri(design=design3, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design4 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts4 <- simTSfmri(design=design4, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design5 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts5 <- simTSfmri(design=design5, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design6 <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts6 <- simTSfmri(design=design6, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+
+design7 <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                           durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+ts7 <- simTSfmri(design=design7, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                 freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+sim_fmri<-data.frame(ts1,ts2,ts3,ts4,ts5,ts6,ts7)
+simple_sim_fmri_matrix_using<-cor(sim_fmri)
+hist(as.vector(simple_sim_fmri_matrix_using))
+simple_sim_fmri_matrix_using
+
+#We further consider truncate the network by weight 0.4
+#this is to explore whether this binariszed network is as
+#we expected, and to understand the impulse and noises
+thresholding_fmri<-as.vector(simple_sim_fmri_matrix_using)
+thresholding_fmri[thresholding_fmri<=0.4]<-0
+thresholding_fmri[thresholding_fmri>0.4]<-1
+thresholding_fmri<-matrix(thresholding_fmri,7,7)
+thresholding_fmri
+
+plot(graph_from_adjacency_matrix(thresholding_fmri,mode="undirected"))
+
+#This is our studied network
+simple_sim_fmri_matrix<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                          -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                          0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                          0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                          0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                          0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                          0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                          -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                          1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                          -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+
+
+
+simple_sim_fmri_matrix<-matrix(simple_sim_fmri_matrix,7,7,byrow = T)
+
+thresholding_fmri<-as.vector(simple_sim_fmri_matrix)
+thresholding_fmri[thresholding_fmri<=0.3]<-0
+thresholding_fmri[thresholding_fmri>0.3]<-1
+thresholding_fmri<-matrix(thresholding_fmri,7,7)
+
+###################################
+#baseline binary ERGM             #
+###################################
+baseline<-matrix(baseline,7,7,byrow = T)
+diag(baseline)<-rep(0,7)
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(baseline[i,j]<0.4) baseline[i,j]<-0
+    else baseline[i,j]<-1
+  }
+}
+baseline <- as.network(baseline, directed = F, matrix.type = "a", ignore.eval = FALSE)
+baseline_model <- ergm(baseline ~ density+concurrent)
+
+baseline_density<-sapply(rep(0,1000),function(x){
+  hi<-simulate(baseline_model)
+  return(summary(hi ~ density))
+})
+
+
+
+pdf("baseline_density_positive.pdf")
+boxplot(baseline_density)
+abline(h=summary(baseline ~ density))
+dev.off()
+
+baseline_transitives<-sapply(rep(0,1000),function(x){
+  hi<-simulate(baseline_model)
+  return(summary(hi ~ transitiveties))
+})
+
+
+
+pdf("baseline_transitivities_positive.pdf")
+boxplot(baseline_transitives)
+abline(h=summary(baseline ~ transitiveties))
+dev.off()
+
+sim_baseline<-lapply(rep(0,950),function(x){
+  hi<-simulate(baseline_model)
+  return(hi)
+})
+pdf("baseline_binary.pdf")
+global_evaluation_baseline(sim_baseline,simple_sim_fmri_matrix)
+dev.off()
+
+#########################################################
+#GERGM2                                                 #
+#########################################################
+#The code of GERGM2 is taking a long fitting time, and
+#should be implemented with care. Note due to the computations 
+#of this model is performed in a manner the normal R program 
+#cannot directly extract out the output. The grid search as described 
+#in the report is manual and rather repetitive, which is therefore excluded 
+#from the code section. Note the use_MPLE_only should be switched as F 
+#if exploring the training process, and it should be switched to T if 
+#want to see the final result with the user_specified_initial_thetas set 
+#as the trained parameter estimates.
+
+simple_sim_fmri_matrix<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                          -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                          0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                          0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                          0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                          0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                          0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                          -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                          1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                          -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+simple_sim_fmri_matrix<-matrix(simple_sim_fmri_matrix,7,7,byrow = T)
+diag(simple_sim_fmri_matrix)<-rep(0,7)
+simple_sim_fmri_matrix_positive<-simple_sim_fmri_matrix
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(simple_sim_fmri_matrix_positive[i,j]<0) simple_sim_fmri_matrix_positive[i,j]<-0
+  }
+}
+
+
+#now implementing GERGM
+formula <- simple_sim_fmri_matrix_positive ~ edges+ ttriads(alpha = 0.5)+twostars(alpha = 0.5)
+
+#this is for Cauchy
+test_Cauchy <- gergm(formula,
+                     network_is_directed=F,
+                     normalization_type = "division",
+                     number_of_networks_to_simulate = 1000,
+                     thin = 1,
+                     proposal_variance = 0.1,
+                     MCMC_burnin = 30000,
+                     convergence_tolerance = 1,
+                     acceptable_fit_p_value_threshold=1,
+                     force_x_theta_update = 10,
+                     force_x_lambda_updates=10,
+                     stop_for_degeneracy=T,
+                     estimate_model=T,
+                     use_MPLE_only=F,
+                     user_specified_initial_thetas=c(4.014904 ,-47.44113  ),
+                     transformation_type="Cauchy",parallel=T,cores=60,use_stochastic_MH=F,parallel_statistic_calculation = TRUE)
+
+save(test_Cauchy,file = "test_Cauchy")
+
+
+
+
+gof_test_Cauchy<-GOF(test_Cauchy)
+Estimate_Plot(test_Cauchy)
+save(gof_test_Cauchy,file="gof_test_Cauchy")
+
+
+# Generate Estimate Plot
+est_plot_Cauchy<-Estimate_Plot(test_Cauchy)
+save(est_plot_Cauchy,file="est_plot_Cauchy")
+# Generate GOF Plot
+
+# Generate Trace Plot
+trace_plot_Cauchy<-Trace_Plot(test_Cauchy)
+save(trace_plot_Cauchy,file="trace_plot_Cauchy")
+
+#consider Gaussian
+test_Gaussian <- gergm(formula,
+                     network_is_directed=F,
+                     normalization_type = "division",
+                     number_of_networks_to_simulate = 1000,
+                     thin = 1,
+                     proposal_variance = 0.1,
+                     MCMC_burnin = 30000,
+                     convergence_tolerance = 1,
+                     acceptable_fit_p_value_threshold=1,
+                     force_x_theta_update = 10,
+                     force_x_lambda_updates=10,
+                     stop_for_degeneracy=T,
+                     estimate_model=T,
+                     use_MPLE_only=F,
+                     user_specified_initial_thetas=c(4.014904 ,-47.44113  ),
+                     transformation_type="Gaussian",parallel=T,cores=60,use_stochastic_MH=F,parallel_statistic_calculation = TRUE)
+
+save(test_Gaussian,file = "test_Gaussian")
+
+
+
+
+gof_test_Gaussian<-GOF(test_Gaussian)
+Estimate_Plot(test_Gaussian)
+save(gof_test_Gaussian,file="gof_test_Gaussian")
+
+
+# Generate Estimate Plot
+est_plot_Gaussian<-Estimate_Plot(test_Gaussian)
+save(est_plot_Gaussian,file="est_plot_Gaussian")
+# Generate GOF Plot
+
+# Generate Trace Plot
+trace_plot_Gaussian<-Trace_Plot(test_Gaussian)
+save(trace_plot_Gaussian,file="trace_plot_Gaussian")
+
+
+test_LogNormal <- gergm(formula,
+                     network_is_directed=F,
+                     normalization_type = "division",
+                     number_of_networks_to_simulate = 1000,
+                     thin = 1,
+                     proposal_variance = 0.1,
+                     MCMC_burnin = 30000,
+                     convergence_tolerance = 1,
+                     acceptable_fit_p_value_threshold=1,
+                     force_x_theta_update = 10,
+                     force_x_lambda_updates=10,
+                     stop_for_degeneracy=T,
+                     estimate_model=T,
+                     use_MPLE_only=T,
+                     user_specified_initial_thetas=c(4.014904 ,-47.44113  ),
+                     transformation_type="LogNormal",parallel=T,cores=60,use_stochastic_MH=F,parallel_statistic_calculation = TRUE)
+
+save(test_LogNormal,file = "test_LogNormal")
+
+
+
+
+gof_test_LogNormal<-GOF(test_LogNormal)
+Estimate_Plot(test_LogNormal)
+save(gof_test_LogNormal,file="gof_test_LogNormal")
+
+
+# Generate Estimate Plot
+est_plot_LogNormal<-Estimate_Plot(test_LogNormal)
+save(est_plot_LogNormal,file="est_plot_LogNormal")
+# Generate GOF Plot
+
+# Generate Trace Plot
+trace_plot_LogNormal<-Trace_Plot(test_LogNormal)
+save(trace_plot_LogNormal,file="trace_plot_LogNormal")
+
+
+################################################
+#Multi-valued 1                                #
+################################################
+
+simple_sim_fmri_matrix<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                          -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                          0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                          0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                          0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                          0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                          0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                          -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                          1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                          -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+simple_sim_fmri_matrix<-matrix(simple_sim_fmri_matrix,7,7,byrow = T)
+diag(simple_sim_fmri_matrix)<-rep(0,7)
+samplk.tot <- as.network(simple_sim_fmri_matrix, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                         names.eval = "weights"
+)
+simple_sim_fmri_matrix_positive<-simple_sim_fmri_matrix
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(simple_sim_fmri_matrix_positive[i,j]<0) simple_sim_fmri_matrix_positive[i,j]<-0
+  }
+}
+samplk.tot_postive <- as.network(simple_sim_fmri_matrix_positive, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                                 names.eval = "weights"
+)
+
+
+#multi-valued
+
+#set as 0, 0.1, 0.4
+num_thres<-3
+multi_frame<-list()
+
+#cutting points that represnet these thresholds
+cut_point<-c(0.05,0.25,0.4)
+#0 layer
+multi_frame[[1]]<-simple_sim_fmri_matrix_positive
+for (k in 1:7) {
+  for (j in 1:7) {
+    if(multi_frame[[1]][k,j]<cut_point[1]) multi_frame[[1]][k,j]<-1
+    else multi_frame[[1]][k,j]<-NA
+  }
+}
+
+#0.1 layer
+multi_frame[[2]]<-simple_sim_fmri_matrix_positive
+for (k in 1:7) {
+  for (j in 1:7) {
+    if(multi_frame[[2]][k,j]>cut_point[1] & multi_frame[[2]][k,j]<cut_point[2]) multi_frame[[2]][k,j]<-1
+    else multi_frame[[2]][k,j]<-NA
+  }
+}
+
+#0.4 layer
+multi_frame[[3]]<-simple_sim_fmri_matrix_positive
+for (k in 1:7) {
+  for (j in 1:7) {
+    if(multi_frame[[3]][k,j]>cut_point[2] ) multi_frame[[3]][k,j]<-1
+    else multi_frame[[3]][k,j]<-NA
+  }
+}
+
+#input 0 entries
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(!is.na(multi_frame[[1]][i,j])
+    ) {
+      multi_frame[[2]][i,j]<-0
+      multi_frame[[3]][i,j]<-0
+      
+    }
+  }
+}
+diag(multi_frame[[2]])<-NA
+diag(multi_frame[[3]])<-NA
+
+#compute statistics
+function(matrix_input){
+  matrix_input<-multi_frame
+  #consider first logit
+  out_fir<-data.frame()
+  for (i in 1:7) {
+    for (j in 1:7) {
+      if(!is.na(matrix_input[[2]][i,j])
+      ) {
+        tri111<-0
+        tri112<-0
+        tri122<-0
+        for (p in 1:7) {
+          tri111<-tri111+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+          tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+          tri112<-tri112+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+        }
+        
+        explain<-c(
+          sum(na.omit(matrix_input[[2]][i,]))+sum(na.omit(matrix_input[[2]][,j])),
+          sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+          tri111,
+          tri112,
+          tri122
+          
+        )
+        response<-matrix_input[[2]][i,j]
+        row<-c(response,explain)
+        out_fir<-rbind(out_fir,row)
+      }
+    }
+  }
+  
+  #consider second logit
+  out_sec<-data.frame()
+  for (i in 1:7) {
+    for (j in i:7) {
+      if(!is.na(matrix_input[[3]][i,j])
+      ) {
+        tri222<-0
+        tri122<-0
+        for (p in 1:7) {
+          tri222<-tri222+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+          tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+        }
+        explain<-c(
+          sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+          tri222,
+          tri122
+        )
+        response<-matrix_input[[3]][i,j]
+        response[response==1]<-1
+        row<-c(response,explain)
+        out_sec<-rbind(out_sec,row)
+      }
+    }
+  }
+}
+
+names(out_sec)<-c("res","a","b","c")
+names(out_fir)<-c("res","a","b","c","d","e")
+out_sec$res<-as.factor(out_sec$res)
+out_fir$res<-as.factor(out_fir$res)
+mblogit(res~a+b+c+d,data =out_fir )
+mblogit(res~a+b+c,data =out_sec )
+
+
+
+#perform simulation
+multi_value_sim<-function(iteration){
+  
+  inp<-runif(0,0.05,n=8)
+  inp<-c(inp,runif(0.05,0.25,n=8),runif(0.25,1,n=5))
+  previous_net<-matrix(0,7,7)
+  previous_net[upper.tri(previous_net)]<-inp
+  previous_net<-previous_net+t(previous_net)
+  previous_net<-simple_sim_fmri_matrix_positive
+  previous_net[6,4]<-0.9
+  previous_net[4,6]<-0.9
+  previous_net[2,5]<-0.9
+  previous_net[5,2]<-0.9
+  previous_net[3,5]<-0.9
+  previous_net[5,3]<-0.9
+  
+  
+  
+  net_size<-7
+  
+  #get inital prob
+  multi_frame<-list()
+  
+  #cutting points that represnet these thresholds
+  cut_point<-c(0.05,0.25,0.4)
+  #0 layer
+  multi_frame[[1]]<-previous_net
+  for (k in 1:7) {
+    for (j in 1:7) {
+      if(multi_frame[[1]][k,j]<cut_point[1]) multi_frame[[1]][k,j]<-1
+      else multi_frame[[1]][k,j]<-NA
+    }
+  }
+  
+  #0.1 layer
+  multi_frame[[2]]<-previous_net
+  for (k in 1:7) {
+    for (j in 1:7) {
+      if(multi_frame[[2]][k,j]>cut_point[1] & multi_frame[[2]][k,j]<cut_point[2]) multi_frame[[2]][k,j]<-1
+      else multi_frame[[2]][k,j]<-NA
+    }
+  }
+  
+  #0.4 layer
+  multi_frame[[3]]<-previous_net
+  for (k in 1:7) {
+    for (j in 1:7) {
+      if(multi_frame[[3]][k,j]>cut_point[2] ) multi_frame[[3]][k,j]<-1
+      else multi_frame[[3]][k,j]<-NA
+    }
+  }
+  
+  #input 0 entries
+  for (i in 1:7) {
+    for (j in 1:7) {
+      if(!is.na(multi_frame[[1]][i,j])
+      ) {
+        multi_frame[[2]][i,j]<-0
+        multi_frame[[3]][i,j]<-0
+        
+      }
+    }
+  }
+  diag(multi_frame[[2]])<-NA
+  diag(multi_frame[[3]])<-NA
+  
+  
+  
+  
+  matrix_input<-multi_frame
+  #consider first logit
+  out_fir<-data.frame()
+  for (i in 1:7) {
+    for (j in 1:7) {
+      if(!is.na(matrix_input[[2]][i,j])
+      ) {
+        tri111<-0
+        tri112<-0
+        tri122<-0
+        for (p in 1:7) {
+          tri111<-tri111+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+          tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+          tri112<-tri112+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+        }
+        
+        explain<-c(
+          sum(na.omit(matrix_input[[2]][i,]))+sum(na.omit(matrix_input[[2]][,j])),
+          sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+          tri111,
+          tri112,
+          tri122
+          
+        )
+        response<-matrix_input[[2]][i,j]
+        row<-c(response,explain)
+        out_fir<-rbind(out_fir,row)
+      }
+    }
+  }
+  
+  two_para<-c(-20.08, 62.83, -39.12)
+  one_para<-c(49.879,1,-49.48,0.02689)
+  
+  product_fir<-c()
+  for (i in 1:nrow(out_fir)) {
+    exp_component<-sum(one_para*out_fir[i,c(2,3,4,5)])-176
+    product_fir<-c(product_fir,((exp(exp_component))^out_fir[i,1])/(1+exp(exp_component)))
+    
+  }
+  
+  #consider second logit
+  out_sec<-data.frame()
+  for (i in 1:7) {
+    for (j in i:7) {
+      if(!is.na(matrix_input[[3]][i,j])
+      ) {
+        tri222<-0
+        tri122<-0
+        for (p in 1:7) {
+          tri222<-tri222+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+          tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+        }
+        explain<-c(
+          sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+          tri222,
+          tri122
+        )
+        response<-matrix_input[[3]][i,j]
+        response[response==1]<-1
+        row<-c(response,explain)
+        out_sec<-rbind(out_sec,row)
+      }
+    }
+  }
+  
+  product_sec<-c()
+  for (i in 1:nrow(out_sec)) {
+    exp_component<-sum(two_para*out_sec[i,c(2,3,4)])+39.06
+    product_sec<-c(product_sec,((exp(exp_component))^out_sec[i,1])/(1+exp(exp_component)))
+    
+  }
+  
+  initial_prob<-prod(product_fir)*prod(product_sec)
+  
+  
+  sum_indi<-c(sum(previous_net)/2)
+  
+  #start looping
+  
+  for (i in 1:iteration) {
+    k<--88
+    j<--88
+    while (k==j) {
+      k<-sample(1:net_size,1)
+      j<-sample(1:net_size,1)
+    }
+    #to choose from upper triangle
+    change_row<-min(c(k,j))
+    change_col<-max(c(k,j))
+    
+    #switch edge on and off
+    proposal_network<-previous_net
+    propse<-2
+    while(propse>1|propse<0){
+      propse<-rnorm(n=1,proposal_network[change_row,change_col],0.1)
+    }
+    proposal_network[change_row,change_col]<-propse
+    proposal_network[lower.tri(proposal_network)]  <- t(proposal_network)[lower.tri(proposal_network)]
+    diag(proposal_network) <- 0
+    
+    #get u
+    u<-runif(n=1,0,1)
+    
+    
+    multi_frame<-list()
+    
+    #cutting points that represnet these thresholds
+    cut_point<-c(0.05,0.25,0.4)
+    #0 layer
+    multi_frame[[1]]<-proposal_network
+    for (k in 1:7) {
+      for (j in 1:7) {
+        if(multi_frame[[1]][k,j]<cut_point[1]) multi_frame[[1]][k,j]<-1
+        else multi_frame[[1]][k,j]<-NA
+      }
+    }
+    
+    #0.1 layer
+    multi_frame[[2]]<-proposal_network
+    for (k in 1:7) {
+      for (j in 1:7) {
+        if(multi_frame[[2]][k,j]>cut_point[1] & multi_frame[[2]][k,j]<cut_point[2]) multi_frame[[2]][k,j]<-1
+        else multi_frame[[2]][k,j]<-NA
+      }
+    }
+    
+    #0.4 layer
+    multi_frame[[3]]<-proposal_network
+    for (k in 1:7) {
+      for (j in 1:7) {
+        if(multi_frame[[3]][k,j]>cut_point[2] ) multi_frame[[3]][k,j]<-1
+        else multi_frame[[3]][k,j]<-NA
+      }
+    }
+    
+    #input 0 entries
+    for (i in 1:7) {
+      for (j in 1:7) {
+        if(!is.na(multi_frame[[1]][i,j])
+        ) {
+          multi_frame[[2]][i,j]<-0
+          multi_frame[[3]][i,j]<-0
+          
+        }
+      }
+    }
+    diag(multi_frame[[2]])<-NA
+    diag(multi_frame[[3]])<-NA
+    
+    
+    
+    
+    matrix_input<-multi_frame
+    #consider first logit
+    out_fir<-data.frame()
+    for (i in 1:7) {
+      for (j in 1:7) {
+        if(!is.na(matrix_input[[2]][i,j])
+        ) {
+          tri111<-0
+          tri112<-0
+          tri122<-0
+          for (p in 1:7) {
+            tri111<-tri111+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+            tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+            tri112<-tri112+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]
+          }
+          
+          explain<-c(
+            sum(na.omit(matrix_input[[2]][i,]))+sum(na.omit(matrix_input[[2]][,j])),
+            sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+            tri111,
+            tri112,
+            tri122
+            
+          )
+          response<-matrix_input[[2]][i,j]
+          row<-c(response,explain)
+          out_fir<-rbind(out_fir,row)
+        }
+      }
+    }
+    
+    two_para<-c(-20.08, 62.83, -39.12)
+    one_para<-c(49.879,1,-49.48,0.02689)
+    
+    product_fir<-c()
+    for (i in 1:nrow(out_fir)) {
+      exp_component<-sum(one_para*out_fir[i,c(2,3,4,5)])-176
+      product_fir<-c(product_fir,((exp(exp_component))^out_fir[i,1])/(1+exp(exp_component)))
+      
+    }
+    
+    #consider second logit
+    out_sec<-data.frame()
+    for (i in 1:7) {
+      for (j in i:7) {
+        if(!is.na(matrix_input[[3]][i,j])
+        ) {
+          tri222<-0
+          tri122<-0
+          for (p in 1:7) {
+            tri222<-tri222+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+            tri122<-tri122+c(0,matrix_input[[3]][i,p])[c(is.na(matrix_input[[3]][i,p]),!is.na(matrix_input[[3]][i,p]))]*c(0,matrix_input[[2]][j,p])[c(is.na(matrix_input[[2]][j,p]),!is.na(matrix_input[[2]][j,p]))]+c(0,matrix_input[[2]][i,p])[c(is.na(matrix_input[[2]][i,p]),!is.na(matrix_input[[2]][i,p]))]*c(0,matrix_input[[3]][j,p])[c(is.na(matrix_input[[3]][j,p]),!is.na(matrix_input[[3]][j,p]))]
+          }
+          explain<-c(
+            sum(na.omit(matrix_input[[3]][i,]))+sum(na.omit(matrix_input[[3]][,j])),
+            tri222,
+            tri122
+          )
+          response<-matrix_input[[3]][i,j]
+          response[response==1]<-1
+          row<-c(response,explain)
+          out_sec<-rbind(out_sec,row)
+        }
+      }
+    }
+    
+    product_sec<-c()
+    for (i in 1:nrow(out_sec)) {
+      exp_component<-sum(two_para*out_sec[i,c(2,3,4)])+39.06
+      product_sec<-c(product_sec,((exp(exp_component))^out_sec[i,1])/(1+exp(exp_component)))
+      
+    }
+    
+    updated_prob<-prod(product_fir)*prod(product_sec)
+    
+    
+    
+    accep<-updated_prob/initial_prob
+    
+    if(u<accep) {initial_prob<-updated_prob
+    previous_net<-proposal_network
+    }
+    
+    sum_indi<-c(sum_indi,sum(previous_net)/2)
+    
+  }
+  return(sum_indi)
+}
+mc1<-multi_value_sim(10000)
+mc2<-multi_value_sim(10000)
+mc3<-multi_value_sim(50000)
+mc4<-multi_value_sim(50000)
+mc5<-multi_value_sim(50000)
+mc6<-multi_value_sim(50000)
+plot(mc1)
+plot(mc2)
+
+pdf("multivalue_MCMC.pdf")
+par(mfrow=c(1,1))
+plot(mc3,type = 'l',col="blue",ylim = c(2,8),ylab = "Network weight sum")
+points(mc4,type = 'l',col="red")
+dev.off()
+
+plot(mc4,type = 'l')
+plot(mc5,type = 'l')
+plot(mc6,type = 'l')
+multi_value_sim(1000)
+si<-lapply(1:100, function(x){
+  multi_value_sim(1000)
+})
+
+
+si_extra<-list()
+for (i in 1:100) {
+  si_extra[[i]]<-as.network(si[[i]], directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                            names.eval = "weights"
+  )
+}
+
+si_vec<-c()
+for (i in 1:10) {
+  si_vec<-c(si_vec,as.vector(si[[i]][-c(1,9,17,25,33,41,49)]))
+}
+
+pdf("multi_value1_his.pdf")
+par(mfrow=c(1,1))
+hist(si_vec,xlim = c(0,1),freq=FALSE,main = "Simulated Edge Weights Distribution (Multi-valued 1)",xlab="Edge Weights")
+dev.off()
+
+hist(si_vec)
+
+pdf("multi_value1_weight.pdf")
+global_evaluation_baseline_weight(si_extra,samplk.tot_postive)
+dev.off()
+
+pdf("multi_value1_binary.pdf")
+global_evaluation_baseline(si_extra,simple_sim_fmri_matrix_positive)
+dev.off()
+cat("out.out")
+
+
+
+##########################################
+#GERGM1                                  #
+##########################################
+#try only on edges with positive nodes
+simple_sim_fmri_matrix_positive<-simple_sim_fmri_matrix
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(simple_sim_fmri_matrix_positive[i,j]<0) simple_sim_fmri_matrix_positive[i,j]<-0
+  }
+}
+samplk.tot_postive <- as.network(simple_sim_fmri_matrix_positive, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                                 names.eval = "weights"
+)
+plot(samplk.tot_postive)
+samplk.tot.nm_postive <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                              response = "weights", reference = ~Unif(0,1))
+mcmc.diagnostics(samplk.tot.nm_postive)
+
+
+#plot the edge weights distribution
+sim_stats_positive_edgewights<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+sim_stats_positive_edgewights<-sim_stats_positive_edgewights[c(-1,-4,-5,-6,-9,
+                                                               -13,-17,-20,-22,
+                                                               -25,-28,-29,-33,
+                                                               -36,-37,-38,-41,
+                                                               -42,-46,-48,-49),]
+sim_stats_positive_edgewights<-as.vector(sim_stats_positive_edgewights)
+
+pdf("new_GERGM1_edgeweight_positive.pdf")
+hist(sim_stats_positive_edgewights,breaks = 50,xlim = c(0,1),freq=FALSE,main = "Simulated Edge Weights (Unif GERGM)",xlab="Edge Weights")
+dev.off()
+
+#we notice 0.4 act as a cutoff point, so try 0.5
+
+
+samplk.tot.nm_postive05 <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.5)+transitiveties, 
+                                response = "weights", reference = ~Unif(0,1))
+
+#plot the edge weights distribution for 0.5
+sim_stats_positive_edgewights05<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive05)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+sim_stats_positive_edgewights05<-sim_stats_positive_edgewights05[c(-1,-4,-5,-6,-9,
+                                                                   -13,-17,-20,-22,
+                                                                   -25,-28,-29,-33,
+                                                                   -36,-37,-38,-41,
+                                                                   -42,-46,-48,-49),]
+sim_stats_positive_edgewights05<-as.vector(sim_stats_positive_edgewights05)
+
+pdf("new_GERGM1_edgeweight_positive05.pdf")
+hist(sim_stats_positive_edgewights05)
+dev.off()
+
+
+sim_stats_positive05<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive05,output = "stats")
+  return(hi[1])
+})
+
+pdf("new_GERGM1_sum_positive05.pdf")
+boxplot(sim_stats_positive05)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2)
+dev.off()
+
+
+#simulate for goodness of fit (density)
+sim_stats_positive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[1])
+})
+mean(sim_stats_positive)
+sum(simple_sim_fmri_matrix_positive)/13/2
+
+
+pdf("new_GERGM1_density_positive.pdf")
+boxplot(sim_stats_positive)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2)
+dev.off()
+
+pdf("new_GERGM1_density_positive_hist.pdf")
+hist(sim_stats_positive)
+dev.off()
+
+
+#simulate for goodness of fit (transitiveweights)
+sim_stats_positive_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[3])
+})
+mean(sim_stats_positive_transitive)
+observed_transitive<-summary(samplk.tot_postive ~ transitiveweights, response = "weights")
+
+boxplot(sim_stats_positive_transitive)
+abline(h=observed_transitive)
+
+pdf("new_GERGM1_transitive_positive.pdf")
+boxplot(sim_stats_positive_transitive)
+abline(h=observed_transitive)
+dev.off()
+
+
+#simulate for goodness of fit (transitivities)
+sim_stats_positive_transitivesss<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive)
+  return(summary(hi ~ transitiveties(threshold=0.4), response = "weights"))
+})
+observed_transitivesss<-summary(samplk.tot_postive ~ transitiveties(threshold=0.4), response = "weights")
+
+pdf("new_GERGM1_transitivessss_positive.pdf")
+boxplot(sim_stats_positive_transitivesss)
+abline(h=observed_transitivesss)
+dev.off()
+
+
+#simulate for goodness of fit (over 0.4)
+sim_stats_positive_over<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[4])
+})
+mean(sim_stats_positive_over)
+observed_over<-summary(samplk.tot_postive ~ atleast(threshold=0.4), response = "weights")
+
+boxplot(sim_stats_positive_over)
+abline(h=observed_over)
+
+
+
+#change reference to normal distribution
+samplk.tot.normal_postive <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                  response = "weights", reference = ~StdNormal)
+mcmc.diagnostics(samplk.tot.normal_postive)
+samplk.tot.normal_postive
+
+sim_stats_positive_edgewights_normal<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.normal_postive)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+sim_stats_positive_edgewights_normal<-sim_stats_positive_edgewights_normal[c(-1,-4,-5,-6,-9,
+                                                                             -13,-17,-20,-22,
+                                                                             -25,-28,-29,-33,
+                                                                             -36,-37,-38,-41,
+                                                                             -42,-46,-48,-49),]
+sim_stats_positive_edgewights_normal<-as.vector(sim_stats_positive_edgewights_normal)
+
+pdf("new_GERGM1_edgeweight_positive_normal.pdf")
+hist(sim_stats_positive_edgewights_normal,breaks = 50,xlim = c(0,1),freq=FALSE,main = "Simulated Edge Weights Distribution (Std Normal GERGM)",xlab="Edge Weights")
+dev.off()
+
+
+#simulate for goodness of fit (density)
+sim_stats_positive_normal<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.normal_postive)
+  return(summary(hi ~ sum, response = "weights"))
+})
+mean(sim_stats_positive_normal)
+sum(simple_sim_fmri_matrix_positive_normal)/13/2
+
+boxplot(sim_stats_positive_normal)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2)
+
+simulate(samplk.tot.normal_postive,output = "stats")
+pdf("new_GERGM1_sum_positive_normal.pdf")
+boxplot(sim_stats_positive_normal)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2)
+dev.off()
+
+#simulate for goodness of fit (transitiveweights)
+sim_stats_positive_normal_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.normal_postive,output = "stats")
+  return(hi[3])
+})
+mean(sim_stats_positive_normal_transitive)
+observed_transitive<-summary(samplk.tot_postive ~ transitiveweights, response = "weights")
+
+pdf("new_GERGM1_transitive_weights_positive_normal.pdf")
+boxplot(sim_stats_positive_normal_transitive)
+abline(h=observed_transitive)
+dev.off()
+
+#simulate for goodness of fit (over 0.4)
+sim_stats_positive_normal_over<-sapply(rep(0,10),function(x){
+  hi<-simulate(samplk.tot.normal_postive)
+})
+mean(sim_stats_positive_normal_over)
+observed_over<-summary(samplk.tot_postive ~ atleast(threshold=0.4), response = "weights")
+
+boxplot(sim_stats_positive_normal_over)
+abline(h=observed_over)
+
+sim_stats_positive_normal_over[[1]]
+
+#write a function for sd of each sample
+
+#considering transitiveweights only
+transitive_get_sd<-function(){
+  hi<-runif(49)
+  hi<-matrix(hi,7,7)
+  diag(hi)<-rep(0,7)
+  fmri_mat<-forceSymmetric(hi)
+  fmri_mat<-as.matrix(fmri_mat)
+  samplk.tot_postive <- as.network(fmri_mat, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                                   names.eval = "weights"
+  )
+  samplk.tot.nm_postive <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                response = "weights", reference = ~Unif(0,1))
+  sim_stats_positive_transitive<-sapply(rep(0,1000),function(x){
+    hi<-simulate(samplk.tot.nm_postive,output = "stats")
+    return(hi[3])
+  })
+  return(sd(sim_stats_positive_transitive))
+}
+#try bernoulli
+samplk.tot.nm_postive_bern <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                   response = "weights", reference = ~Bernoulli)
+mcmc.diagnostics(samplk.tot.nm_postive)
+
+#simulate for goodness of fit (density)
+sim_stats_positive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[1])
+})
+mean(sim_stats_positive)
+sum(simple_sim_fmri_matrix_positive)/13/2
+
+
+pdf("new_GERGM1_density_positive.pdf")
+boxplot(sim_stats_positive)
+abline(h=sum(simple_sim_fmri_matrix_positive))
+dev.off()
+
+
+
+#simulate for goodness of fit (transitiveweights)
+sim_stats_positive_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[3])
+})
+mean(sim_stats_positive_transitive)
+observed_transitive<-summary(samplk.tot_postive ~ transitiveweights, response = "weights")
+
+boxplot(sim_stats_positive_transitive)
+abline(h=observed_transitive)
+
+pdf("new_GERGM1_transitive_positive.pdf")
+boxplot(sim_stats_positive_transitive)
+abline(h=observed_transitive)
+dev.off()
+
+
+#simulate for goodness of fit (over 0.4)
+sim_stats_positive_over<-sapply(rep(0,1000),function(x){
+  hi<-simulate(samplk.tot.nm_postive,output = "stats")
+  return(hi[4])
+})
+mean(sim_stats_positive_over)
+observed_over<-summary(samplk.tot_postive ~ atleast(threshold=0.4), response = "weights")
+
+boxplot(sim_stats_positive_over)
+abline(h=observed_over)
+
+
+sim_gergm_unif<-lapply(rep(0,950),function(x){
+  hi<-simulate(samplk.tot.nm_postive)
+  return(hi)
+})
+pdf("unif_gergm_binary.pdf")
+global_evaluation_baseline(positive_gergm_unif,simple_sim_fmri_matrix)
+dev.off()
+
+
+
+pdf("gergm_7_unif_summary.pdf")
+global_evaluation_baseline_weight(positive_gergm_unif,samplk.tot_postive)
+dev.off()
+
+#for normal
+
+positive_gergm_norm<-lapply(rep(0,1000),function(x){
+  hi<-c(-5)
+  while (any(hi>1) | any(hi<0)) {
+    hi<-simulate(samplk.tot.normal_postive)
+    out<-hi
+    hi<-as.matrix(hi, attrname = "weights")
+    hi<-as.vector(hi)
+  }
+  return(out)
+})
+pdf("gergm_7_norm_summary.pdf")
+global_evaluation_baseline_weight(positive_gergm_norm,samplk.tot_postive)
+dev.off()
+
+pdf("gergm_7_norm_summary_baseline.pdf")
+global_evaluation_baseline(positive_gergm_norm,simple_sim_fmri_matrix_positive)
+dev.off()
+
+
+samplk.tot.poisson_postive <- ergm(samplk.tot_multi_hundred ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                   response = "weights", reference = ~Poisson)
+
+samplk.tot.poisson_postive <- ergm(samplk.tot_multi_fifty ~ sum + transitiveweights("min","max", "min") +atleast(threshold=20), 
+                                   response = "weights", reference = ~Poisson)
+positive_gergm_poi<-lapply(rep(0,1000),function(x){
+  hi<-c(-5)
+  while (any(hi>50) | any(hi<0)) {
+    hi<-simulate(samplk.tot.poisson_postive)
+    hi<-as.matrix(hi, attrname = "weights")
+    out<-hi/50
+    hi<-as.vector(hi)
+  }
+  out<-as.network(out, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                  names.eval = "weights"
+  )
+  return(out)
+})
+
+poi_vec<-lapply(rep(0,1000),function(x){
+  hi<-c(-5)
+  while (any(hi>50) | any(hi<0)) {
+    hi<-simulate(samplk.tot.poisson_postive)
+    hi<-as.matrix(hi, attrname = "weights")
+    out<-hi/50
+    out<-as.vector(out)
+  }
+  return(out)
+})
+pdf("gergm_7_poi_summary.pdf")
+global_evaluation_baseline_weight(positive_gergm_poi,samplk.tot_postive)
+dev.off()
+
+pdf("gergm_7_poi_hist.pdf")
+hist(unlist(poi_vec),xlim = c(0,0.8),freq=FALSE,main = "Simulated Edge Weights Distribution (Poisson GERGM)",xlab="Edge Weights")
+dev.off()
+length(unlist(poi_vec))
+hist(unlist(poi_vec))
+25000/49000
+global_evaluation_baseline_beamer(positive_gergm_poi,simple_sim_fmri_matrix_positive)
+
+samplk.tot.binomial_postive <- ergm(samplk.tot_multi_hundred ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                    response = "weights", reference = ~Binomial(0.3))
+samplk.tot.nm_postive
+
+#computational time
+size_attempts<-seq(7,21,2)
+time_record_unif<-list()
+time_record_normal<-list()
+for (i in size_attempts) {
+  value_raw<-sapply(1:21,function(x){
+    
+    design1_high <- simprepTemporal(totaltime=tt, onsets=os, 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts1_high <- simTSfmri(design=design1_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design2_high <- simprepTemporal(totaltime=tt, onsets=os, 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts2_high <- simTSfmri(design=design2_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design3_high <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts3_high <- simTSfmri(design=design3_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design4_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts4_high <- simTSfmri(design=design4_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design5_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts5_high <- simTSfmri(design=design5_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design6_high <- simprepTemporal(totaltime=tt, onsets=seq(0,310,9), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts6_high <- simTSfmri(design=design6_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    design7_high <- simprepTemporal(totaltime=tt, onsets=runif(n=34,min=0,max=310), 
+                                    durations=dur, effectsize=1, TR=tr, hrf="double-gamma")
+    ts7_high <- simTSfmri(design=design7_high, SNR=1, noise = c("mixture"), rho = 0.2, freq.low = 128, freq.heart = 1.17, 
+                          freq.resp = 0.2, vee=1, weights = c(0.8,0.14,0,0.06,0))
+    
+    sim_fmri<-data.frame(ts1_high,ts2_high,ts3_high,ts4_high,ts5_high,ts6_high,ts7_high)
+    sim_fmri_matrix<-cor(sim_fmri)
+    sim_fmri_vec<-sim_fmri_matrix[upper.tri(sim_fmri_matrix)]
+    return(sim_fmri_vec)})
+  size<-i*(i-1)/2
+  value_raw<-as.vector(value_raw)
+  value<-value_raw[1:size]
+  res <- matrix(0, i, i)
+  res[upper.tri(res)] <- value
+  diag(res) <- 0
+  res[lower.tri(res)]  <- t(res)[lower.tri(res)]
+  for (k in 1:i) {
+    for (j in 1:i) {
+      if(res[k,j]<0) res[k,j]<-0
+    }
+  }
+  net_size<-as.network(res, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                       names.eval = "weights"
+  )
+  time_record_unif[i]<-mean(sapply(1:10,function(x){system.time(ergm(net_size ~ sum + transitiveweights("min","max", "min") +atleast(threshold=0.4), 
+                                                                     response = "weights", reference = ~Unif(0,1)))[1]}))
+  time_record_normal[i]<-mean(sapply(1:10,function(x){system.time(ergm(net_size ~ sum + transitiveweights("min","max", "min") +atleast(threshold=0.4), 
+                                                                       response = "weights", reference = ~StdNormal))[1]}))
+}
+time_record_unif
+system.time(2+2)
+
+
+as.vector(time_record_unif)
+time_record<-c(time_record_unif[[7]],time_record_unif[[9]],time_record_unif[[11]],time_record_unif[[13]],time_record_unif[[15]],time_record_unif[[17]],time_record_unif[[19]],time_record_unif[[21]])
+
+pdf("gergm_time_eval.pdf")
+plot(y=time_record,x=seq(7,21,2),type = "l",col="red",xlab = "network size",ylab = "fitting time")
+points(y=3.80135*(1+0.25)^seq(0,14,0.01),x=seq(7,21,0.01),type = "l",col="blue")
+dev.off()
+
+
+
+
+
+
+
+###############################
+#Multi-valued 2               #
+###############################
+##############################################################################
+#Multi-valued ergm
+#Implement for ten times matrix
+multi_matrix_ten<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                    -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                    0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                    0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                    0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                    0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                    0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                    -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                    1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                    -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+multi_matrix_ten<-matrix(multi_matrix_ten,7,7,byrow = T)
+diag(multi_matrix_ten)<-rep(0,7)
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(multi_matrix_ten[i,j]<0) multi_matrix_ten[i,j]<-0
+  }
+}
+multi_matrix_ten<-multi_matrix_ten*10
+multi_matrix_ten<-floor(multi_matrix_ten)
+samplk.tot_multi <- as.network(multi_matrix_ten, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                               names.eval = "weights"
+)
+
+multi_ten <- ergm(samplk.tot_multi ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=4), 
+                  response = "weights", reference = ~DiscUnif(0,10))
+
+#plot the edge weights distribution
+multi_ten_edgewights<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+multi_ten_edgewights<-multi_ten_edgewights[c(-1,-4,-5,-6,-9,
+                                             -13,-17,-20,-22,
+                                             -25,-28,-29,-33,
+                                             -36,-37,-38,-41,
+                                             -42,-46,-48,-49),]
+multi_ten_edgewights<-as.vector(multi_ten_edgewights)
+
+pdf("multi_ten_edgeweight_positive.pdf")
+hist(multi_ten_edgewights)
+dev.off()
+
+
+#simulate for goodness of fit (density)
+multi_ten_positive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten,output = "stats")
+  return(hi[1])
+})
+
+
+
+pdf("multi_ten_density_positive.pdf")
+boxplot(multi_ten_positive)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2*10)
+dev.off()
+
+pdf("new_GERGM1_density_positive_hist.pdf")
+hist(sim_stats_positive)
+dev.off()
+
+
+#simulate for goodness of fit (transitiveweights)
+multi_ten_positive_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten,output = "stats")
+  return(hi[3])
+})
+
+observed_transitive_multi<-summary(samplk.tot_multi ~ transitiveweights, response = "weights")
+
+
+pdf("multi_ten_transitive_positive.pdf")
+boxplot(multi_ten_positive_transitive)
+abline(h=observed_transitive_multi)
+dev.off()
+
+
+#simulate for goodness of fit (over 0.4)
+multi_ten_positive_over<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten,output = "stats")
+  return(hi[4])
+})
+observed_over_multi<-summary(samplk.tot_multi ~ atleast(threshold=4), response = "weights")
+
+pdf("multi_ten_04_positive.pdf")
+boxplot(multi_ten_positive_over)
+abline(h=observed_over_multi)
+dev.off()
+
+
+
+################################
+#Implement for hundred times matrix
+multi_matrix_hundred<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                        -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                        0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                        0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                        0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                        0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                        0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                        -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                        1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                        -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+multi_matrix_hundred<-matrix(multi_matrix_hundred,7,7,byrow = T)
+diag(multi_matrix_hundred)<-rep(0,7)
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(multi_matrix_hundred[i,j]<0) multi_matrix_hundred[i,j]<-0
+  }
+}
+multi_matrix_hundred<-multi_matrix_hundred*100
+multi_matrix_hundred<-floor(multi_matrix_hundred)
+samplk.tot_multi_hundred <- as.network(multi_matrix_hundred, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                                       names.eval = "weights"
+)
+
+multi_hundred <- ergm(samplk.tot_multi_hundred ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=40), 
+                      response = "weights", reference = ~DiscUnif(0,100))
+
+#plot the edge weights distribution
+multi_hundred_edgewights<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_hundred)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+multi_hundred_edgewights<-multi_hundred_edgewights[c(-1,-4,-5,-6,-9,
+                                                     -13,-17,-20,-22,
+                                                     -25,-28,-29,-33,
+                                                     -36,-37,-38,-41,
+                                                     -42,-46,-48,-49),]
+multi_hundred_edgewights<-as.vector(multi_hundred_edgewights)
+
+pdf("multi_hundred_edgeweight_positive.pdf")
+hist(multi_hundred_edgewights)
+dev.off()
+
+
+#simulate for goodness of fit (density)
+multi_hundred_positive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_hundred,output = "stats")
+  return(hi[1])
+})
+
+
+
+pdf("multi_hundred_density_positive.pdf")
+boxplot(multi_hundred_positive)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2*100)
+dev.off()
+
+pdf("new_GERGM1_density_positive_hist.pdf")
+hist(sim_stats_positive)
+dev.off()
+
+
+#simulate for goodness of fit (transitiveweights)
+multi_hundred_positive_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_hundred,output = "stats")
+  return(hi[3])
+})
+
+observed_transitive_multi_hundred<-summary(samplk.tot_multi_hundred ~ transitiveweights, response = "weights")
+
+
+pdf("multi_hundred_transitive_positive.pdf")
+boxplot(multi_hundred_positive_transitive)
+abline(h=observed_transitive_multi_hundred)
+dev.off()
+
+
+#simulate for goodness of fit (over 0.4)
+multi_ten_positive_over<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten,output = "stats")
+  return(hi[4])
+})
+observed_over_multi<-summary(samplk.tot_multi ~ atleast(threshold=4), response = "weights")
+
+boxplot(multi_ten_positive_over)
+abline(h=observed_over_multi)
+
+
+################################
+#Implement for fifty times matrix
+multi_matrix_fifty<-c(1.00000000,0.65943778,0.14243325, -0.01167145, -0.04435883,
+                      -0.06708235,  0.05299883 , 0.65943778  ,1.00000000 , 0.11730449,
+                      0.03538296, -0.07527165, -0.11800582,  0.03781875,  0.14243325,
+                      0.11730449,  1.00000000,  0.01293397,  0.04978544, -0.05125256,
+                      0.06136470, -0.01167145,  0.03538296,  0.01293397,  1.00000000,
+                      0.40997789,  0.43768640, -0.07306495, -0.04435883, -0.07527165,
+                      0.04978544,  0.40997789,  1.00000000,  0.48448580,  0.09399427,
+                      -0.06708235, -0.11800582, -0.05125256,  0.43768640,  0.48448580,
+                      1.00000000, -0.06436870,  0.05299883,  0.03781875,  0.06136470,
+                      -0.07306495,  0.09399427, -0.06436870,  1.00000000)
+
+multi_matrix_fifty<-matrix(multi_matrix_fifty,7,7,byrow = T)
+diag(multi_matrix_fifty)<-rep(0,7)
+for (i in 1:7) {
+  for (j in 1:7) {
+    if(multi_matrix_fifty[i,j]<0) multi_matrix_fifty[i,j]<-0
+  }
+}
+multi_matrix_fifty<-multi_matrix_fifty*50
+multi_matrix_fifty<-floor(multi_matrix_fifty)
+samplk.tot_multi_fifty <- as.network(multi_matrix_fifty, directed = F, matrix.type = "a", ignore.eval = FALSE, 
+                                     names.eval = "weights"
+)
+
+multi_fifty <- ergm(samplk.tot_multi_fifty ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=20), 
+                    response = "weights", reference = ~DiscUnif(0,50))
+
+hi<-simulate(multi_fifty)
+hi<-as.matrix(hi, attrname = "weights")
+hi
+#plot the edge weights distribution
+multi_fifty_edgewights<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_fifty)
+  hi<-as.matrix(hi, attrname = "weights")
+  return(hi)
+})
+multi_fifty_edgewights<-multi_fifty_edgewights[c(-1,-4,-5,-6,-9,
+                                                 -13,-17,-20,-22,
+                                                 -25,-28,-29,-33,
+                                                 -36,-37,-38,-41,
+                                                 -42,-46,-48,-49),]
+multi_fifty_edgewights<-as.vector(multi_fifty_edgewights)
+
+pdf("multi_fifty_edgeweight_positive.pdf")
+hist(multi_fifty_edgewights)
+dev.off()
+
+
+#simulate for goodness of fit (density)
+multi_fifty_positive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_fifty,output = "stats")
+  return(hi[1])
+})
+
+
+
+pdf("multi_fifty_density_positive.pdf")
+boxplot(multi_fifty_positive)
+abline(h=sum(simple_sim_fmri_matrix_positive)/2*50)
+dev.off()
+
+pdf("new_GERGM1_density_positive_hist.pdf")
+hist(sim_stats_positive)
+dev.off()
+
+
+#simulate for goodness of fit (transitiveweights)
+multi_fifty_positive_transitive<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_fifty,output = "stats")
+  return(hi[3])
+})
+
+observed_transitive_multi_fifty<-summary(samplk.tot_multi_fifty ~ transitiveweights, response = "weights")
+
+
+pdf("multi_fifty_transitive_positive.pdf")
+boxplot(multi_fifty_positive_transitive)
+abline(h=observed_transitive_multi_fifty)
+dev.off()
+
+
+#simulate for goodness of fit (over 0.4)
+multi_ten_positive_over<-sapply(rep(0,1000),function(x){
+  hi<-simulate(multi_ten,output = "stats")
+  return(hi[4])
+})
+observed_over_multi<-summary(samplk.tot_multi ~ atleast(threshold=4), response = "weights")
+
+boxplot(multi_ten_positive_over)
+abline(h=observed_over_multi)
+
+
+#######################
+#comparing fitting time
+microbenchmark(multi_hundred <- ergm(samplk.tot_multi_hundred ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=40), 
+                                     response = "weights", reference = ~DiscUnif(0,100))
+)
+microbenchmark(multi_ten <- ergm(samplk.tot_multi ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=4), 
+                                 response = "weights", reference = ~DiscUnif(0,10)),times = 3
+)
+microbenchmark(samplk.tot.nm_postive <- ergm(samplk.tot_postive ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=0.4)+transitiveties, 
+                                             response = "weights", reference = ~Unif(0,1)),times = 10)
+
+microbenchmark(multi_fifty <- ergm(samplk.tot_multi_fifty ~ sum+edges + transitiveweights("min","max", "min") +atleast(threshold=20), 
+                                   response = "weights", reference = ~DiscUnif(0,100))
+)
+
+
+
+#################################
+#Multi-layered                  #
+#################################
+
+layer_sim<-function(last_net,network_matrix,para_one,para_two,iteration){
+  
+  initial_matrix<-last_net
+  previous_net<-network_matrix
+  net_size<-ncol(network_matrix)
+  
+  #get inital prob
+  previous_network_net <- as.network(previous_net, directed = F, matrix.type = "a", ignore.eval = FALSE)
+  if(is.error(try(summary(previous_network_net~density)))==T) {density<-0
+  }else density<-summary(previous_network_net~density)
+  if(is.error(try(summary(previous_network_net~concurrent)))==T) {concurrent<-0
+  }else concurrent<-summary(previous_network_net~concurrent)
+  
+  
+  if(para_one==Inf){
+    if(density==0){
+      term_density<-0
+    } else term_density<-Inf
+  } else if(para_one==-Inf){
+    if(density==0){
+      term_density<-0
+    } else term_density<--Inf
+  } else term_density<-para_one*density
+  
+  if(para_two==Inf){
+    if(concurrent==0){
+      term_concurrent<-0
+    } else term_concurrent<-Inf
+  } else if(para_two==-Inf){
+    if(concurrent==0){
+      term_concurrent<-0
+    } else term_concurrent<--Inf
+  } else term_concurrent<-para_two*concurrent
+  
+  
+  if(term_density==Inf &&term_concurrent==-Inf){
+    initial_prob<-0
+  } else if(term_density==-Inf &&term_concurrent==Inf){
+    initial_prob<-0
+  } else {
+    initial_prob<-exp(term_density+term_concurrent)
+  }
+  
+  
+  #start looping
+  if (all(last_net==matrix(0,7,7))){
+    previous_net<-last_net
+  } else {for (i in 1:iteration) {
+    check_layer<-T
+    while(check_layer==T){
+      k<--88
+      j<--88
+      while (k==j) {
+        k<-sample(1:net_size,1)
+        j<-sample(1:net_size,1)
+      }
+      #to choose from upper triangle
+      change_row<-min(c(k,j))
+      change_col<-max(c(k,j))
+      
+      #switch edge on and off
+      proposal_network<-previous_net
+      if(proposal_network[change_row,change_col]==1) {proposal_network[change_row,change_col]<-0
+      } else {proposal_network[change_row,change_col]<-1}
+      proposal_network[lower.tri(proposal_network)]  <- t(proposal_network)[lower.tri(proposal_network)]
+      diag(proposal_network) <- 0
+      
+      if(proposal_network[change_row,change_col]==1 && initial_matrix[change_row,change_col]==0){
+        check_layer<-T
+      } else{
+        check_layer<-F
+      }
+    }
+    
+    
+    #get u
+    u<-runif(n=1,0,1)
+    
+    #get the summary statistics
+    proposal_network_net <- as.network(proposal_network, directed = F, matrix.type = "a", ignore.eval = FALSE)
+    if(is.error(try(summary(proposal_network_net~density)))==T) {density<-0
+    }else density<-summary(proposal_network_net~density)
+    if(is.error(try(summary(proposal_network_net~concurrent)))==T) {concurrent<-0
+    }else concurrent<-summary(proposal_network_net~concurrent)
+    
+    
+    if(para_one==Inf){
+      if(density==0){
+        term_density<-0
+      } else term_density<-Inf
+    } else if(para_one==-Inf){
+      if(density==0){
+        term_density<-0
+      } else term_density<--Inf
+    } else term_density<-para_one*density
+    
+    if(para_two==Inf){
+      if(concurrent==0){
+        term_concurrent<-0
+      } else term_concurrent<-Inf
+    } else if(para_two==-Inf){
+      if(concurrent==0){
+        term_concurrent<-0
+      } else term_concurrent<--Inf
+    } else term_concurrent<-para_two*concurrent
+    
+    if(term_density==Inf &&term_concurrent==-Inf){
+      updated_prob<-0
+    } else if(term_density==-Inf &&term_concurrent==Inf){
+      updated_prob<-0
+    } else {
+      updated_prob<-exp(term_density+term_concurrent)
+    }
+    
+    
+    if((updated_prob==Inf) && (initial_prob==Inf)){
+      initial_prob<-initial_prob
+      previous_net<-previous_net
+    } else if((updated_prob==0) && (initial_prob==0)){
+      initial_prob<-initial_prob
+      previous_net<-previous_net
+    } else {
+      accep<-updated_prob/initial_prob
+      
+      if(u<accep) {initial_prob<-updated_prob
+      previous_net<-proposal_network
+      }
+    }
+    
+    
+  }}
+  return(previous_net)
+}
+
+mcsapply<-function (X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE) {
+  FUN <- match.fun(FUN)
+  answer <- mclapply(X = X, FUN = FUN, ...)
+  if (USE.NAMES && is.character(X) && is.null(names(answer))) 
+    names(answer) <- X
+  if (!isFALSE(simplify) && length(answer)) 
+    simplify2array(answer, higher = (simplify == "array"))
+  else answer
+}
+
+
+load("layered_network_new_new_new")
+
+thresholds_new_new_new<-c(0,0.05,0.12,0.2,0.3,0.4,0.5,0.6,0.7)
+num_layer_new_new_new<-7
+
+
+simed_new_new_new<-mclapply(1:1000,function(x){
+  first_lay<-matrix(1,7,7)
+  diag(first_lay)<-0
+  colnames(first_lay)<-c(1,2,3,4,5,6,7)
+  row.names(first_lay)<-c(1,2,3,4,5,6,7)
+  net_simed<-list()
+  net_simed[[1]]<-first_lay
+  para_list<-list()
+  para_list[[1]]<-c(-30.52,999999999)
+  para_list[[2]]<-c(-11.434,0.843)
+  para_list[[3]]<-c(-1.203856 , 1.267702)
+  para_list[[4]]<-c(18.16,5.41)
+  para_list[[5]]<-c(8.120183, 5.408729)
+  para_list[[6]]<-c(-7.765159, -50.090863)
+  para_list[[7]]<-c(-4.839048, -109.000000)
+  
+  net_simed_tidyversion<-list()
+  net_simed_tidyversion[[1]]<-first_lay
+  matrix<-layered_network_new_new_new[[1]]
+  
+  yoyo<-as.network(matrix,directed = F)
+  
+  yoyo_fit<-ergm(yoyo~density+concurrent)
+  sec_lay<-simulate(yoyo_fit)
+  sec_lay<-as.matrix(sec_lay)
+  
+  net_simed_tidyversion[[2]]<-sec_lay
+  net_simed[[2]]<-sec_lay
+  
+  
+  
+  
+  
+  
+  for (i in 2:7) {
+    mat_input<-net_simed[[i]]
+    size<-ncol(mat_input)
+    
+    
+    if(dim(mat_input)[1]==0){
+      net_simed[[i+1]]<-matrix(0,7,7)
+    } else{
+      p_one<-para_list[[i]][1]
+      p_two<-para_list[[i]][2]
+      print(i)
+      print("i+1 start")
+      net_simed[[i+1]]<-layer_sim(mat_input,mat_input,p_one,p_two,2000)
+      print("i+1 end")
+    }
+    
+  }
+  print("out of for loop")
+  
+  #transform to upper triangle matix vector
+  net_tidy_upper<-list()
+  for (i in 1:length(net_simed)) {
+    net_tidy_upper[[i]]<-net_simed[[i]][upper.tri(net_simed[[i]])]
+  }
+  
+  #get valued network
+  ini_mat<-runif(0,thresholds_new_new_new[2],n=21)
+  for (i in 2:length(net_simed)) {
+    for(j in 1:21){
+      if (net_simed[[i]][j]==1){
+        ini_mat[j]<-runif(thresholds_new_new_new[i],thresholds_new_new_new[1+i],n=1)
+      }
+    }
+  }
+  
+  out_matrix<-matrix(0,7,7)
+  out_matrix[upper.tri(out_matrix)]<-ini_mat
+  out_matrix<-out_matrix+t(out_matrix)
+  return(out_matrix)
+},mc.cores = 60)
+
+
+
+
+save(simed_new_new_new,file="simed_new_new_new_1000_willbebest_real")
+
+
+
